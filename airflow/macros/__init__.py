@@ -41,6 +41,49 @@ def ds_add(ds, days):
     return ds.isoformat()[:10]
 
 
+def ds_add_hours(ds, hours = 8):
+    """
+        Add or subtract hours from a YYYY-MM-DD %H:%M:%S
+
+        :param ds: anchor date in ``YYYY-MM-DD %H:%M:%S`` format to add to
+        :type ds: datetime
+        :param hours: number of hours to add to the ds, you can use negative values,default = 8
+        :type hours: int
+
+        >>> ds_add_hours('2015-01-01 12:23:32', 8)
+        '2015-01-01 20:23:32'
+        >>> ds_add_hours('2015-01-06 20:32:12', 8)
+        '2015-01-07 04:32:12'
+    """
+    ds = (ds + timedelta(hours=hours)).strftime("%Y-%m-%d %H:%M:%S")
+    return ds
+
+def to_Beijing_date(ds, format = '%Y-%m-%d'):
+    """
+        Takes an string  and format string as specified in the output format
+        :param ds: input string which contains a date
+        :type ds: str
+        :param format: output string format. default %Y-%m-%d
+        :type format: str
+        >>> to_Beijing_date('2015-01-01 12:23:32')
+        '2015-01-01'
+        >>> to_Beijing_date('2015-01-06 20:32:12', '%Y%m%d')
+        '20150106'
+        dags:
+            t4 = BashOperator(
+                task_id='shell',
+                bash_command='echo ' + '{{ macros.to_Beijing_date(execution_date) }}',dag=dag)
+    """
+    ds = ds_add_hours(ds)
+    if format.find('-') == -1:
+        if ds.find('-') > -1:
+            ds = ds.replace('-','')
+    if ds.find(' ') > -1:
+        ds = ds.split(' ')[0]
+    return datetime.strptime(ds, format).strftime(format)
+
+
+
 def ds_format(ds, input_format, output_format):
     """
     Takes an input string and outputs another string
