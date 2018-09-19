@@ -58,16 +58,16 @@ def ds_add_hours(ds, hours = 8):
     ds = (ds + timedelta(hours=hours)).strftime("%Y-%m-%d %H:%M:%S")
     return ds
 
-def to_Beijing_date(ds, format = '%Y-%m-%d'):
+def to_beijing_date(ds, format = '%Y-%m-%d'):
     """
         Takes an string  and format string as specified in the output format
         :param ds: input string which contains a date
         :type ds: str
         :param format: output string format. default %Y-%m-%d
         :type format: str
-        >>> to_Beijing_date('2015-01-01 12:23:32')
+        >>> to_beijing_date('2015-01-01 12:23:32')
         '2015-01-01'
-        >>> to_Beijing_date('2015-01-06 20:32:12', '%Y%m%d')
+        >>> to_beijing_date('2015-01-06 20:32:12', '%Y%m%d')
         '20150106'
         dags:
             t4 = BashOperator(
