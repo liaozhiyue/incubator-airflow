@@ -1671,7 +1671,7 @@ class TaskInstance(Base, LoggingMixin):
         beijing_ds = (self.execution_date + timedelta(hours=8)).isoformat()[:10]
         beijing_ds_nodash = beijing_ds.replace('-', '')
         beijing_ts = (self.execution_date + timedelta(hours=8)).isoformat()
-        beijing_ts_nodash = beijing_ts.replace('-', '')
+        beijing_ts_nodash = beijing_ts.replace('-', '').replace(':', '')
 
         #############################
 
