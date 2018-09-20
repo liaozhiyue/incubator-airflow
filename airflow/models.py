@@ -1664,6 +1664,19 @@ class TaskInstance(Base, LoggingMixin):
         yesterday_ds_nodash = yesterday_ds.replace('-', '')
         tomorrow_ds_nodash = tomorrow_ds.replace('-', '')
 
+
+
+        # add by Keep liaozhiyue ####
+
+        beijing_ds = (self.execution_date + timedelta(hours=8)).isoformat()[:10]
+        beijing_ds_nodash = beijing_ds.replace('-', '')
+        beijing_ts = (self.execution_date + timedelta(hours=8)).isoformat()
+        beijing_ts_nodash = beijing_ts.replace('-', '')
+
+        #############################
+
+
+
         ti_key_str = "{task.dag_id}__{task.task_id}__{ds_nodash}"
         ti_key_str = ti_key_str.format(**locals())
 
