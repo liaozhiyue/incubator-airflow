@@ -159,16 +159,16 @@ class LdapUser(models.User):
                                                      configuration.get("ldap",
                                                                        "user_name_attr"),
                                                      user.username)
-
+        # Keep Inc ldap not supports group. then delete group group filter
         # Load the ldap group(s) a user belongs to
-        try:
-            self.ldap_groups = groups_user(conn,
-                                           configuration.get("ldap", "basedn"),
-                                           configuration.get("ldap", "user_filter"),
-                                           configuration.get("ldap", "user_name_attr"),
-                                           user.username)
-        except AirflowConfigException:
-            log.debug("Missing configuration for ldap settings. Skipping")
+        # try:
+        #     self.ldap_groups = groups_user(conn,
+        #                                    configuration.get("ldap", "basedn"),
+        #                                    configuration.get("ldap", "user_filter"),
+        #                                    configuration.get("ldap", "user_name_attr"),
+        #                                    user.username)
+        # except AirflowConfigException:
+        #     log.debug("Missing configuration for ldap settings. Skipping")
 
     @staticmethod
     def try_login(username, password):
