@@ -24,7 +24,7 @@ from builtins import str
 from builtins import object, bytes
 import copy
 from collections import namedtuple
-from datetime import datetime, timedelta
+from datetime import datetime, timedelta, date
 import dill
 import functools
 import getpass
@@ -1664,18 +1664,66 @@ class TaskInstance(Base, LoggingMixin):
         yesterday_ds_nodash = yesterday_ds.replace('-', '')
         tomorrow_ds_nodash = tomorrow_ds.replace('-', '')
 
+        ################################################################################################################
+        # liaozhiyue@keep.com
+        # 添加北京时间相关时间宏
+        ################################################################################################################
 
+        # 当天日期
 
-        # add by Keep liaozhiyue ####
+        bj_date = self.execution_date + timedelta(hours=8)
 
-        beijing_ds = (self.execution_date + timedelta(hours=8)).isoformat()[:10]
+        beijing_ds = bj_date.isoformat()[:10]
         beijing_ds_nodash = beijing_ds.replace('-', '')
-        beijing_ts = (self.execution_date + timedelta(hours=8)).isoformat()
+        beijing_ts = bj_date.isoformat()
         beijing_ts_nodash = beijing_ts.replace('-', '').replace(':', '')
 
-        #############################
+        # 月初月末日期、周一周日日期
 
+        bj_month_start_date = date(bj_date.year, bj_date.month, 1)
 
+        if 12 == bj_date.month:
+            bj_month_end_date = date(bj_date.year, 12, 31)
+        else:
+            bj_month_end_date = date(bj_date.year, bj_date.month + 1, 1) - timedelta(days=1)
+
+        one_day = timedelta(days=1)
+        bj_monday_date = bj_date
+        bj_sunday_date = bj_date
+        while bj_monday_date.weekday() != 0:
+            bj_monday_date -= one_day
+        while bj_sunday_date.weekday() != 6:
+            bj_sunday_date += one_day
+
+        beijing_month_start_ds = bj_month_start_date.isoformat()[:10]
+        beijing_month_end_ds = bj_month_end_date.isoformat()[:10]
+        beijing_week_start_ds = bj_monday_date.isoformat()[:10]
+        beijing_week_end_ds = bj_sunday_date.isoformat()[:10]
+
+        # Keep薪资月（26号至25号，跨度一个月）开始、结束日期
+
+        keep_start_year = bj_date.year
+        keep_end_year = bj_date.year
+        if bj_date.day >= 26:
+            keep_start_month = bj_date.month
+            keep_end_month = bj_date .month + 1
+            if keep_end_month == 13:
+                keep_end_month = 1
+                keep_end_year += 1
+        else:
+            keep_start_month = bj_date.month - 1
+            keep_end_month = bj_date.month
+            if keep_start_month == 0:
+                keep_start_month = 12
+                keep_start_year -= 1
+
+        keep_month_start_date = date(keep_start_year, keep_start_month, 26)
+        keep_month_end_date = date(keep_end_year, keep_end_month, 25)
+
+        keep_month_start_ds = keep_month_start_date.isoformat()[:10]
+        keep_month_end_ds = keep_month_end_date.isoformat()[:10]
+
+        ################################################################################################################
 
         ti_key_str = "{task.dag_id}__{task.task_id}__{ds_nodash}"
         ti_key_str = ti_key_str.format(**locals())
