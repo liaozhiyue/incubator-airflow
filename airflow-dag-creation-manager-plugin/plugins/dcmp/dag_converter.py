@@ -437,7 +437,7 @@ return not skip
         for dcmp_dag in dcmp_dags:
             conf = dcmp_dag.get_approved_conf(session=session)
             if conf:
-                # -- 准备DAG owner，写入代码 --
+                # -- 准备DAG owner，写入Python代码 --
                 conf['owner'] = dcmp_dag.owner_name
                 # -- end --
                 confs[dcmp_dag.dag_name] = conf
