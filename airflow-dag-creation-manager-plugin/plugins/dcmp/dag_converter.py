@@ -43,14 +43,14 @@ class DAGConverter(object):
         ("add_start_task", get_bool_code_false, False), ("add_end_task", get_bool_code_false, False),
         ("skip_dag_not_latest", get_bool_code_false, False), ("skip_dag_on_prev_running", get_bool_code_false, False),
         ("email_on_skip_dag", get_bool_code_false, False), ("emails", get_string, False), ("start_date", get_string, False),
-        ("end_date", get_string, False))
+        ("end_date", get_string, False),("owner", get_string, False))
     TASK_ITEMS = (("task_name", get_string, True), ("task_type", get_string, True), ("command", get_string, False),
         ("priority_weight", get_int, False), ("upstreams", get_list, False), ("queue_pool", get_string, False),
         ("task_category", get_string, False), )
     TASK_EXTRA_ITEMS = (("retries", get_int, "retries=%s,"), ("retry_delay_minutes", get_int, "retry_delay=timedelta(minutes=%s),"), )
-    
+
     DAG_CODE_TEMPLATE = load_dag_template("dag_code")
-    
+
     BASE_TASK_CODE_TEMPLATE = r"""%(before_code)s
 _["%%(task_name)s"] = %(operator_name)s(
     task_id='%%(task_name)s',
@@ -67,12 +67,12 @@ _["%%(task_name)s"].category = {
     "order": %%(task_category_order)s,
 }
 """
-    
+
     DUMMY_TASK_CODE_TEMPLATE = BASE_TASK_CODE_TEMPLATE % {
         "before_code": "",
         "operator_name": "DummyOperator",
         "operator_code": "", }
-    
+
     BASH_TASK_CODE_TEMPLATE = BASE_TASK_CODE_TEMPLATE % {
         "before_code": "",
         "operator_name": "BashOperator",
@@ -90,7 +90,7 @@ _["%%(task_name)s"].category = {
 %(processed_command)s
 '''.decode("utf-8"),
 """, }
-    
+
     PYTHON_TASK_CODE_TEMPLATE = BASE_TASK_CODE_TEMPLATE % {
         "before_code": """
 def %(task_name)s_worker(ds, **context):
@@ -143,11 +143,11 @@ def %(task_name)s_worker(ds, **context):
         "operator_code": r"""
     delta=%(processed_command)s,
 """, }
-    
+
     STREAM_CODE_TEMPLATE = """
 _["%(task_name)s"] << _["%(upstream_name)s"]
 """
-    
+
     TASK_TYPE_TO_TEMPLATE = {
         "bash": BASH_TASK_CODE_TEMPLATE,
         "dummy": DUMMY_TASK_CODE_TEMPLATE,
@@ -159,7 +159,7 @@ _["%(task_name)s"] << _["%(upstream_name)s"]
         "time_sensor": TIME_SENSOR_TASK_CODE_TEMPLATE,
         "timedelta_sensor": TIMEDELTA_SENSOR_TASK_CODE_TEMPLATE,
     }
-    
+
     JOB_NAME_RE = re.compile(r"^[a-zA-Z][a-zA-Z0-9_]+$")
 
     def check_job_name(self, job_name):
@@ -192,7 +192,7 @@ _["%(task_name)s"] << _["%(upstream_name)s"]
     def dict_to_json(self, dag_dict, strict=False):
         if not dag_dict or not isinstance(dag_dict, dict):
             raise ValueError("dags required")
-        
+
         task_dicts = dag_dict.get("tasks", [])
         if not task_dicts or not isinstance(task_dicts, list):
             raise ValueError("tasks required")
@@ -217,7 +217,7 @@ _["%(task_name)s"] << _["%(upstream_name)s"]
                 croniter(cron)
             except Exception as e:
                 raise ValueError("dag params cron invalid")
-        
+
         task_names = []
         tasks_res = []
         for task_dict in task_dicts:
@@ -227,18 +227,18 @@ _["%(task_name)s"] << _["%(upstream_name)s"]
                 raise ValueError("task %s name duplicated" % task_name)
             task_names.append(task_res["task_name"])
             tasks_res.append(task_res)
-        
+
         for task_res in tasks_res:
             for upstream in task_res["upstreams"]:
                 if upstream not in task_names or upstream == task_res["task_name"]:
                     raise ValueError("task %s upstream %s invalid" % (task_res["task_name"], upstream))
-        
+
         dag_res["tasks"] = tasks_res
         return dag_res
-    
+
     def render_confs(self, confs):
         confs = deepcopy(confs)
-        now = datetime.now()        
+        now = datetime.now()
         dag_codes = []
         task_catgorys_dict = {
             "default": {"order": str(0), "fgcolor": "#f0ede4"}
@@ -246,7 +246,7 @@ _["%(task_name)s"] << _["%(upstream_name)s"]
         for i, category_data in enumerate(dcmp_settings.DAG_CREATION_MANAGER_TASK_CATEGORYS):
             key, fgcolor = category_data
             task_catgorys_dict[key] = {"order": str(i + 1), "fgcolor": fgcolor}
-        
+
         for dag_name, conf in confs.iteritems():
             emails = [email.strip() for email in conf["emails"].split(",") if email.strip()] or dcmp_settings.DAG_CREATION_MANAGER_DEFAULT_EMAILS
             conf["email_code"] = json.dumps(emails)
@@ -255,7 +255,7 @@ _["%(task_name)s"] << _["%(upstream_name)s"]
                 conf["owner"] = "airflow"
 
             task_names = [task["task_name"] for task in conf["tasks"]]
-            
+
             def get_task_name(origin_task_name):
                 task_name = origin_task_name
                 for i in xrange(10000):
@@ -266,7 +266,7 @@ _["%(task_name)s"] << _["%(upstream_name)s"]
                 else:
                     task_name = None
                 return task_name
-            
+
             if conf["add_start_task"]:
                 task_name = get_task_name("start")
                 if task_name:
@@ -277,7 +277,7 @@ _["%(task_name)s"] << _["%(upstream_name)s"]
                         "task_name": task_name,
                         "task_type": "dummy",
                     }))
-            
+
             if conf["add_end_task"]:
                 task_name = get_task_name("end")
                 if task_name:
@@ -313,7 +313,7 @@ if not skip:
     left_window = context['dag'].following_schedule(context['execution_date'])
     right_window = context['dag'].following_schedule(left_window)
     logging.info('Checking latest only with left_window: %s right_window: %s now: %s', left_window, right_window, now)
-    
+
     if not left_window < now <= right_window:
         skip = True
 """
@@ -371,13 +371,13 @@ return not skip
                 conf["start_date_code"] = start_date.strftime('datetime.strptime("%Y-%m-%d %H:%M:%S", "%%Y-%%m-%%d %%H:%%M:%%S")')
                 conf["end_date_code"] = "None"
                 conf["cron_code"] = "'%s'" % cron
-            
+
             if conf["start_date"]:
                 conf["start_date_code"] = 'datetime.strptime("%s", "%%Y-%%m-%%d %%H:%%M:%%S")' % conf["start_date"]
 
             if conf["end_date"]:
                 conf["end_date_code"] = 'datetime.strptime("%s", "%%Y-%%m-%%d %%H:%%M:%%S")' % conf["end_date"]
-            
+
             dag_code = self.DAG_CODE_TEMPLATE % conf
 
             task_codes = []
@@ -425,11 +425,11 @@ return not skip
                         "upstream_name": upstream,
                     }
                     stream_codes.append(stream_code)
-    
+
             dag_code = "%s\n%s\n%s" % (dag_code, "\n".join(task_codes), "\n".join(stream_codes))
             dag_codes.append((dag_name, dag_code))
         return dag_codes
-    
+
     @provide_session
     def refresh_dags(self, session=None):
         confs = OrderedDict()
@@ -437,16 +437,19 @@ return not skip
         for dcmp_dag in dcmp_dags:
             conf = dcmp_dag.get_approved_conf(session=session)
             if conf:
+                # -- 准备DAG owner，写入代码 --
+                conf['owner'] = dcmp_dag['owner_name']
+                # -- end --
                 confs[dcmp_dag.dag_name] = conf
-        
+
         dag_codes = self.render_confs(confs)
-        
+
         tmp_dir = mkdtemp(prefix="dcmp_deployed_dags_")
         os.chmod(tmp_dir, 0o755)
         for dag_name, dag_code in dag_codes:
             with open(os.path.join(tmp_dir, dag_name + ".py"), "w") as f:
                 f.write(dag_code.encode("utf-8"))
-        
+
         err = None
         for _ in xrange(3):
             shutil.rmtree(dcmp_settings.DAG_CREATION_MANAGER_DEPLOYED_DAGS_FOLDER, ignore_errors=True)
@@ -461,21 +464,21 @@ return not skip
         else:
             shutil.rmtree(tmp_dir, ignore_errors=True)
             raise err
-    
+
     def create_dagbag_by_conf(self, conf):
         _, dag_code = self.render_confs({conf["dag_name"]: conf})[0]
         return create_dagbag_by_dag_code(dag_code)
-    
+
     def clean_dag_dict(self, dag_dict, strict=False):
         conf = self.dict_to_json(dag_dict, strict=strict)
         dagbag = self.create_dagbag_by_conf(conf)
         if dagbag.import_errors:
             raise ImportError(dagbag.import_errors.items()[0][1])
         return conf
-    
+
     def create_dag_by_conf(self, conf):
         return self.create_dagbag_by_conf(conf).dags[conf["dag_name"]]
-    
+
     def create_task_by_task_conf(self, task_conf, dag_conf=None):
         if not task_conf.get("task_name"):
             task_conf["task_name"] = "tmp_task"
@@ -493,14 +496,14 @@ return not skip
         if not task:
             raise ValueError("invalid conf")
         return task
-        
+
     def create_task_instance_by_task_conf(self, task_conf, dag_conf=None, execution_date=None):
         if execution_date is None:
             execution_date = datetime.now()
         task = self.create_task_by_task_conf(task_conf, dag_conf=dag_conf)
         ti = TaskInstance(task, execution_date)
         return ti
-    
+
     def render_task_conf(self, task_conf, dag_conf=None, execution_date=None):
         ti = self.create_task_instance_by_task_conf(task_conf, dag_conf=dag_conf, execution_date=execution_date)
         ti.render_templates()

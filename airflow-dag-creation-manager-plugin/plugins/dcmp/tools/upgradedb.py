@@ -114,8 +114,14 @@ def run_version_0_2_1():
     run_sql("ALTER TABLE dcmp_dag_conf ADD approver_user_name varchar(250) DEFAULT NULL;", ignore_error=True)
     run_sql("ALTER TABLE dcmp_dag_conf ADD approved_at datetime(6);", ignore_error=True)
     run_sql("ALTER TABLE dcmp_dag_conf ADD INDEX approved_at (approved_at);", ignore_error=True)
-    
+
     run_sql("ALTER TABLE dcmp_user_profile ADD approval_notification_emails text NOT NULL;", ignore_error=True)
+
+
+# add by liaozhiyue@keep.com
+def run_version_0_3_1():
+    run_sql("ALTER TABLE dcmp_dag ADD owner_id int(11);", ignore_error=True)
+    run_sql("ALTER TABLE dcmp_dag ADD owner_name varchar(250);", ignore_error=True)
 
 
 def main():
@@ -124,6 +130,7 @@ def main():
     run_version_0_1_1()
     run_version_0_2_0()
     run_version_0_2_1()
+    run_version_0_3_1()
 
 
 if __name__ == "__main__":

@@ -62,15 +62,24 @@ class DcmpDag(Base):
     last_editor_user_name = Column(String(ID_LEN))
     last_edited_at = Column(DateTime, index=True)
     updated_at = Column(DateTime, index=True, default=datetime.now, onupdate=datetime.now)
+    # 增加 dag owner字段
+    owner_id = Column(Integer)
+    owner_name = Column(String(ID_LEN))
 
     def __repr__(self):
         return self.dag_name
-    
+
     def set_last_editor(self, user):
         if user:
             self.last_editor_user_id = user.id
             self.last_editor_user_name = user.username
-    
+
+    # 设置dag owner
+    def set_owner(self, user):
+        if user:
+            self.owner_id = user.id
+            self.owner_name = user.username
+
     def start_editing(self, user):
         if user:
             if not self.editing or user.id != self.editing_user_id:
@@ -78,15 +87,15 @@ class DcmpDag(Base):
             self.editing = True
             self.editing_user_id = user.id
             self.editing_user_name = user.username
-    
+
     def set_approver(self, user):
         if user:
             self.approver_user_id = user.id
             self.approver_user_name = user.username
-    
+
     def end_editing(self):
         self.editing = False
-    
+
     @provide_session
     def get_dcmp_dag_conf(self, version=None, session=None):
         if not version:
@@ -96,7 +105,7 @@ class DcmpDag(Base):
             DcmpDagConf.version == version,
         ).first()
         return dcmp_dag_conf
-    
+
     @provide_session
     def get_conf(self, pure=False, version=None, session=None):
         dcmp_dag_conf = self.get_dcmp_dag_conf(version=version, session=session)
@@ -107,13 +116,13 @@ class DcmpDag(Base):
         else:
             conf = {}
         return conf
-    
+
     @provide_session
     def get_approved_conf(self, pure=False, session=None):
         if self.approved_version <= 0:
             return {}
         return self.get_conf(pure=pure, version=self.approved_version, session=session)
-    
+
     @provide_session
     def approve_conf(self, version=None, user=None, session=None):
         if not version:
@@ -124,7 +133,7 @@ class DcmpDag(Base):
         dcmp_dag_conf = self.get_dcmp_dag_conf(version=self.approved_version, session=session)
         dcmp_dag_conf.approved_at = self.last_approved_at
         dcmp_dag_conf.set_approver(user)
-    
+
     @provide_session
     def update_conf(self, conf, user=None, session=None):
         created = self.id is None
@@ -139,6 +148,9 @@ class DcmpDag(Base):
             self.version += 1
         if created:
             self.dag_name = conf["dag_name"]
+            # 如果是第一次创建，设置一下owner
+            # Todo: 如何修改owner？
+            self.set_owner(user)
             session.add(self)
         session.flush()
         dcmp_dag_conf = DcmpDagConf()
@@ -171,7 +183,7 @@ class DcmpDag(Base):
                     send_email(approval_notification_emails_list, title, body)
         else:
             self.approve_conf(user=user, session=session)
-    
+
     @provide_session
     def delete_conf(self, user=None, session=None):
         dcmp_dag_conf = DcmpDagConf()
@@ -183,7 +195,7 @@ class DcmpDag(Base):
         dcmp_dag_conf.set_creator(user)
         session.add(dcmp_dag_conf)
         session.delete(self)
-    
+
     @classmethod
     @provide_session
     def create_or_update_conf(cls, conf, user=None, session=None):
@@ -231,12 +243,12 @@ class DcmpDagConf(Base):
     def conf(cls):
         return synonym('_conf',
                        descriptor=property(cls.get_conf, cls.set_conf))
-    
+
     def set_approver(self, user):
         if user:
             self.approver_user_id = user.id
             self.approver_user_name = user.username
-    
+
     def set_creator(self, user):
         if user:
             self.creator_user_id = user.id
