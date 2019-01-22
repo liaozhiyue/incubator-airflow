@@ -495,6 +495,7 @@ class User(Base):
 
     id = Column(Integer, primary_key=True)
     username = Column(String(ID_LEN), unique=True)
+    group = Column(String(500))
     email = Column(String(500))
     superuser = False
 
@@ -2845,6 +2846,8 @@ class DagModel(Base):
     fileloc = Column(String(2000))
     # String representing the owners
     owners = Column(String(2000))
+    # String representing the groups
+    groups = Column(String(2000))
 
     def __repr__(self):
         return "<DAG: {self.dag_id}>".format(self=self)
