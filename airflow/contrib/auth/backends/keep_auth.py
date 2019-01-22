@@ -249,6 +249,7 @@ class LdapUser(models.User):
         return self.superuser
 
 
+# 从cookie获取user_id后回调该方法反查user信息（符合一定条件的话user信息会提供给current_user变量使用）
 @login_manager.user_loader
 def load_user(userid):
     log.debug("Loading user %s", userid)
@@ -263,6 +264,7 @@ def load_user(userid):
     return LdapUser(user)
 
 
+# login_manager.login_view = 'airflow.login'. 由flask_login 框架调用
 def login(self, request):
     if current_user.is_authenticated():
         flash("You are already logged in")
@@ -283,9 +285,11 @@ def login(self, request):
                            form=form)
 
     try:
+        # 验证登陆
         LdapUser.try_login(username, password)
         log.info("User %s successfully authenticated", username)
 
+        # 更新已有用户/新建用户到数据库表
         session = settings.Session()
         user = session.query(models.User).filter(
             models.User.username == username).first()
@@ -297,7 +301,11 @@ def login(self, request):
 
         session.merge(user)
         session.commit()
+
+        # 提交用户信息，写入cookie（记录user_id，使用时用@login_manager.user_loader回调方法反查User信息）
         flask_login.login_user(LdapUser(user))
+
+        # 提交数据库session并关闭
         session.commit()
         session.close()
 
