@@ -35,13 +35,13 @@ class AirflowModelView(ModelView):
 
 
 class UserGroupView(wwwutils.SuperUserMixin, AirflowModelView):
-    verbose_name = "UserGroup Model"
-    verbose_name_plural = "UserGroup Models"
+    verbose_name = "User Group"
+    verbose_name_plural = "User Groups"
     column_default_sort = 'id'
     can_create = True
     can_delete = True
     can_edit = True
-    column_display_actions = False
+    column_display_actions = True
     column_list = ('id', 'username', 'group', 'creator_user_name', 'updated_at', 'created_at',)
     column_filters = ('username', 'group', 'creator_user_name',)
     #form_columns = ('is_active', 'is_paused', )
