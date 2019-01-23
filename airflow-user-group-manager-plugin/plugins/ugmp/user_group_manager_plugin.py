@@ -12,8 +12,9 @@ from flask_admin import BaseView, expose
 from flask_admin.contrib.sqla import ModelView
 from flask_admin.contrib.sqla.view import func
 from flask_admin.actions import action
+from functools import wraps
 
-from dag_available_plugin.models import UserGroup
+from ugmp.models import UserGroup
 
 
 def login_required(func):
@@ -34,15 +35,15 @@ class AirflowModelView(ModelView):
 
 
 class UserGroupView(wwwutils.SuperUserMixin, AirflowModelView):
-    verbose_name = "DAG Model"
-    verbose_name_plural = "DAG Models"
-    column_default_sort = 'dag_id'
+    verbose_name = "UserGroup Model"
+    verbose_name_plural = "UserGroup Models"
+    column_default_sort = 'id'
     can_create = False
     can_delete = False
     can_edit = False
     column_display_actions = False
-    column_list = ('dag_id', 'is_active', 'is_paused', 'owners', 'last_scheduler_run', )
-    column_filters = ('dag_id', 'is_active', 'is_paused', 'last_scheduler_run', )
+    column_list = ('id', 'username', 'group', 'creator_user_name', 'updated_at', 'created_at',)
+    column_filters = ('username', 'group', 'creator_user_name',)
     form_columns = ('is_active', 'is_paused', )
 
     def get_query(self):
@@ -50,36 +51,6 @@ class UserGroupView(wwwutils.SuperUserMixin, AirflowModelView):
 
     def get_count_query(self):
         return self.session.query(func.count('*')).filter(self.model.is_subdag == False)
-
-    @action('set_is_paused', "Set Pause", None)
-    def action_set_is_paused(self, ids):
-        self.set_dags(ids, "is_paused", True)
-
-    @action('unset_is_paused', "Unset Pause", None)
-    def action_unset_is_paused(self, ids):
-        self.set_dags(ids, "is_paused", False)
-
-    @action('set_is_active', "Set Active", None)
-    def action_set_is_active(self, ids):
-        self.set_dags(ids, "is_active", True)
-
-    @action('unset_is_active', "Unset Active", None)
-    def action_unset_is_active(self, ids):
-        self.set_dags(ids, "is_active", False)
-
-    @provide_session
-    def set_dags(self, ids, key, value, session=None):
-        try:
-            count = 0
-            for dag_model in session.query(self.model).filter(self.model.dag_id.in_(ids)).all():
-                count += 1
-                setattr(dag_model, key, value)
-            session.commit()
-            flash("{count} dag models '{key}' were set to '{value}'".format(**locals()))
-        except Exception as ex:
-            if not self.handle_view_exception(ex):
-                raise Exception("Ooops")
-            flash('Failed to set {key}'.format(**locals()), 'error')
 
     @csrf.exempt
     @expose("/api", methods=["GET", "POST"])

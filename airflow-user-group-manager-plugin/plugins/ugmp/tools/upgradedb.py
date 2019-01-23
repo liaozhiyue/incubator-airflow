@@ -32,8 +32,8 @@ def run_version_0_0_1():
     run_sql("""
         CREATE TABLE IF NOT EXISTS `ugmp_user_group` (
           `id` int(11) NOT NULL AUTO_INCREMENT,
-          `username` 250 NOT NULL,
-          `group` 250 NOT NULL,
+          `username` varchar(250) NOT NULL,
+          `group` varchar(250) NOT NULL,
           `creator_user_id` int(11) DEFAULT NULL,
           `creator_user_name` varchar(250) DEFAULT NULL,
           `updated_at` datetime(6) NOT NULL,
@@ -41,7 +41,7 @@ def run_version_0_0_1():
           PRIMARY KEY (`id`),
           KEY `username` (`username`),
           KEY `group` (`group`),
-          UNIQUE KEY `user_group` (`user`, `group`)
+          UNIQUE KEY `user_group` (`username`, `group`)
         ) DEFAULT CHARSET=utf8mb4;
     """)
 
