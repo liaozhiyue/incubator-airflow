@@ -27,7 +27,7 @@ def login_required(func):
     return func_wrapper
 
 class AirflowModelView(ModelView):
-    list_template = 'dag_available_plugin/model_list.html'
+    list_template = 'ugmp/model_list.html'
     edit_template = 'airflow/model_edit.html'
     create_template = 'airflow/model_create.html'
     column_display_actions = True
@@ -38,9 +38,9 @@ class UserGroupView(wwwutils.SuperUserMixin, AirflowModelView):
     verbose_name = "UserGroup Model"
     verbose_name_plural = "UserGroup Models"
     column_default_sort = 'id'
-    can_create = False
-    can_delete = False
-    can_edit = False
+    can_create = True
+    can_delete = True
+    can_edit = True
     column_display_actions = False
     column_list = ('id', 'username', 'group', 'creator_user_name', 'updated_at', 'created_at',)
     column_filters = ('username', 'group', 'creator_user_name',)
