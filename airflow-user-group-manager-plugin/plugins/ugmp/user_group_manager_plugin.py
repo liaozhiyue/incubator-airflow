@@ -1,6 +1,6 @@
 # encoding: utf-8
 
-
+import airflow
 from airflow import settings, configuration
 from airflow.plugins_manager import AirflowPlugin
 from airflow.www import utils as wwwutils
@@ -44,13 +44,13 @@ class UserGroupView(wwwutils.SuperUserMixin, AirflowModelView):
     column_display_actions = False
     column_list = ('id', 'username', 'group', 'creator_user_name', 'updated_at', 'created_at',)
     column_filters = ('username', 'group', 'creator_user_name',)
-    form_columns = ('is_active', 'is_paused', )
+    #form_columns = ('is_active', 'is_paused', )
 
-    def get_query(self):
-        return self.session.query(self.model).filter(self.model.is_subdag == False)
+    #def get_query(self):
+    #    return self.session.query(self.model).filter(self.model.is_subdag == False)
 
-    def get_count_query(self):
-        return self.session.query(func.count('*')).filter(self.model.is_subdag == False)
+    #def get_count_query(self):
+    #    return self.session.query(func.count('*')).filter(self.model.is_subdag == False)
 
     @csrf.exempt
     @expose("/api", methods=["GET", "POST"])
