@@ -46,8 +46,15 @@ def run_version_0_0_1():
     """)
 
 
+def run_version_0_0_2():
+    run_sql("""
+        ALTER TABLE `ugmp_user_group` RENAME `username` TO ``user_name;
+    """)
+
+
 def main():
     run_version_0_0_1()
+    run_version_0_0_2()
 
 
 if __name__ == "__main__":

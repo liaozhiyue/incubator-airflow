@@ -42,8 +42,8 @@ class UserGroupView(wwwutils.SuperUserMixin, AirflowModelView):
     can_delete = True
     can_edit = True
     column_display_actions = True
-    column_list = ('id', 'username', 'group', 'creator_user_name', 'updated_at', 'created_at',)
-    column_filters = ('username', 'group', 'creator_user_name',)
+    column_list = ('id', 'user_name', 'group', 'creator_user_name', 'updated_at', 'created_at',)
+    column_filters = ('user_name', 'group', 'creator_user_name',)
     #form_columns = ('is_active', 'is_paused', )
 
     #def get_query(self):
@@ -63,13 +63,13 @@ class UserGroupView(wwwutils.SuperUserMixin, AirflowModelView):
             username = request.args.get("username")
             if username:
                 user_groups = session.query(UserGroup).filter(
-                    UserGroup.username == username
+                    UserGroup.user_name == username
                 ).order_by(
                     UserGroup.created_at.desc()
                 ).limit(200)
                 return jsonify([{
                     "id": user_group.id,
-                    "username": user_group.username,
+                    "username": user_group.user_name,
                     "group": user_group.group,
                     "creator_user_id": user_group.creator_user_id,
                     "creator_user_name": user_group.creator_user_name,
@@ -86,7 +86,7 @@ class UserGroupView(wwwutils.SuperUserMixin, AirflowModelView):
                 user_groups = session.query(UserGroup).filter(
                     UserGroup.group == group
                 ).filter(
-                    UserGroup.username == username
+                    UserGroup.user_name == username
                 )
                 return jsonify({
                     "contains": True if len(user_groups) != 0 else False
@@ -97,7 +97,7 @@ class UserGroupView(wwwutils.SuperUserMixin, AirflowModelView):
             user_groups = session.query(UserGroup).order_by(UserGroup.created_at.desc()).limit(200)
             return jsonify([{
                 "id": user_group.id,
-                "username": user_group.username,
+                "username": user_group.user_name,
                 "group": user_group.group,
                 "creator_user_id": user_group.creator_user_id,
                 "creator_user_name": user_group.creator_user_name,

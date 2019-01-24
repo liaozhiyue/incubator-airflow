@@ -32,7 +32,7 @@ class UserGroup(Base):
     __tablename__ = "ugmp_user_group"
 
     id = Column(Integer, primary_key=True)
-    username = Column(String(ID_LEN), nullable=False, unique=True)
+    user_name = Column(String(ID_LEN), nullable=False, unique=True)
     group = Column(String(ID_LEN), nullable=False, unique=True)
     creator_user_id = Column(Integer, nullable=False)
     creator_user_name = Column(String(ID_LEN), nullable=False)
