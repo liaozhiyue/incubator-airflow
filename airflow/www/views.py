@@ -1826,21 +1826,27 @@ class HomeView(AdminIndexView):
         # read orm_dags from the db
         sql_query = session.query(DM)
 
-        if do_filter and owner_mode in ['ldapgroup', 'keepgroup']:
-            sql_query = sql_query.filter(
-                ~DM.is_subdag,
-                DM.is_active,
-                DM.owners.in_(current_user.ldap_groups)
-            )
-        elif do_filter and owner_mode == 'user':
-            sql_query = sql_query.filter(
-                ~DM.is_subdag, DM.is_active,
-                DM.owners == current_user.user.username
-            )
-        else:
-            sql_query = sql_query.filter(
-                ~DM.is_subdag, DM.is_active
-            )
+        # if do_filter and owner_mode == 'ldapgroup':
+        #     sql_query = sql_query.filter(
+        #         ~DM.is_subdag,
+        #         DM.is_active,
+        #         DM.owners.in_(current_user.ldap_groups)
+        #     )
+        # elif do_filter and owner_mode == 'keepgroup':
+        #     sql_query = sql_query.filter(
+        #         ~DM.is_subdag,
+        #         DM.is_active,
+        #         DM.owners.in_(current_user.ldap_groups)
+        #     )
+        # elif do_filter and owner_mode == 'user':
+        #     sql_query = sql_query.filter(
+        #         ~DM.is_subdag, DM.is_active,
+        #         DM.owners == current_user.user.username
+        #     )
+        # else:
+        #     sql_query = sql_query.filter(
+        #         ~DM.is_subdag, DM.is_active
+        #     )
 
         # optionally filter out "paused" dags
         if hide_paused:
@@ -1870,13 +1876,20 @@ class HomeView(AdminIndexView):
                                          not dag.parent_dag]
 
         # optionally filter to get only dags that the user should see
-        if do_filter and owner_mode in ['ldapgroup', 'keepgroup']:
+        if do_filter and owner_mode == 'ldapgroup':
             # only show dags owned by someone in @current_user.ldap_groups
             webserver_dags = {
                 dag.dag_id: dag
                 for dag in unfiltered_webserver_dags
                 if dag.owner in current_user.ldap_groups
             }
+        elif do_filter and owner_mode == 'keepgroup':
+            # only show dags owned by someone in @current_user.ldap_groups
+            webserver_dags = {
+                dag.dag_id: dag
+                for dag in unfiltered_webserver_dags
+                if len([val for val in dag.groups.split(',') if val in current_user.ldap_groups]) >= 1
+                }
         elif do_filter and owner_mode == 'user':
             # only show dags owned by @current_user.user.username
             webserver_dags = {
