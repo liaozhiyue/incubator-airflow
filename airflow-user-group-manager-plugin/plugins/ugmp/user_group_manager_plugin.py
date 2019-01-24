@@ -1,24 +1,21 @@
 # encoding: utf-8
 
 import airflow
-from airflow import settings, configuration
+from airflow import settings
 from airflow.plugins_manager import AirflowPlugin
 from airflow.www import utils as wwwutils
 from airflow.www.app import csrf
 from airflow.utils.db import provide_session
 from flask import Blueprint, request, jsonify
-from flask_login import flash
 from flask_admin import BaseView, expose
 from flask_admin.contrib.sqla import ModelView
-from flask_admin.contrib.sqla.view import func
-from flask_admin.actions import action
 from functools import wraps
 
 from ugmp.models import UserGroup
 
 
 def login_required(func):
-# when airflow loads plugins, login is still None.
+    # when airflow loads plugins, login is still None.
     @wraps(func)
     def func_wrapper(*args, **kwargs):
         if airflow.login:
@@ -26,31 +23,27 @@ def login_required(func):
         return func(*args, **kwargs)
     return func_wrapper
 
+
 class AirflowModelView(ModelView):
-    list_template = 'ugmp/model_list.html'
+    list_template = 'airflow/model_list.html'
     edit_template = 'airflow/model_edit.html'
     create_template = 'airflow/model_create.html'
     column_display_actions = True
+    can_create = True
+    can_delete = True
+    can_edit = True
     page_size = 500
 
 
 class UserGroupView(wwwutils.SuperUserMixin, AirflowModelView):
+
     verbose_name = "User Group"
     verbose_name_plural = "User Groups"
-    column_default_sort = 'id'
-    can_create = True
-    can_delete = True
-    can_edit = True
-    column_display_actions = True
-    column_list = ('id', 'user_name', 'group', 'creator_user_name', 'updated_at', 'created_at',)
-    column_filters = ('user_name', 'group', 'creator_user_name',)
-    #form_columns = ('is_active', 'is_paused', )
-
-    #def get_query(self):
-    #    return self.session.query(self.model).filter(self.model.is_subdag == False)
-
-    #def get_count_query(self):
-    #    return self.session.query(func.count('*')).filter(self.model.is_subdag == False)
+    column_default_sort = 'user_name'
+    column_list = ('id', 'user_name', 'group', 'updated_at', 'created_at',)
+    column_filters = ('id', 'user_name', 'group', 'updated_at', 'created_at',)
+    # column_editable_list = ('user_name', 'group',)
+    form_columns = ('user_name', 'group',)
 
     @csrf.exempt
     @expose("/api", methods=["GET", "POST"])
@@ -71,8 +64,6 @@ class UserGroupView(wwwutils.SuperUserMixin, AirflowModelView):
                     "id": user_group.id,
                     "username": user_group.user_name,
                     "group": user_group.group,
-                    "creator_user_id": user_group.creator_user_id,
-                    "creator_user_name": user_group.creator_user_name,
                     "updated_at": user_group.updated_at.strftime("%Y-%m-%d %H:%M:%S"),
                     "created_at": user_group.created_at.strftime("%Y-%m-%d %H:%M:%S"),
                 } for user_group in user_groups])
@@ -99,8 +90,6 @@ class UserGroupView(wwwutils.SuperUserMixin, AirflowModelView):
                 "id": user_group.id,
                 "username": user_group.user_name,
                 "group": user_group.group,
-                "creator_user_id": user_group.creator_user_id,
-                "creator_user_name": user_group.creator_user_name,
                 "updated_at": user_group.updated_at.strftime("%Y-%m-%d %H:%M:%S"),
                 "created_at": user_group.created_at.strftime("%Y-%m-%d %H:%M:%S"),
             } for user_group in user_groups])

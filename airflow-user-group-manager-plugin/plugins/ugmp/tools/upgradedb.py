@@ -34,8 +34,6 @@ def run_version_0_0_1():
           `id` int(11) NOT NULL AUTO_INCREMENT,
           `username` varchar(250) NOT NULL,
           `group` varchar(250) NOT NULL,
-          `creator_user_id` int(11) DEFAULT NULL,
-          `creator_user_name` varchar(250) DEFAULT NULL,
           `updated_at` datetime(6) NOT NULL,
           `created_at` datetime(6) NOT NULL,
           PRIMARY KEY (`id`),
@@ -48,7 +46,8 @@ def run_version_0_0_1():
 
 def run_version_0_0_2():
     run_sql("""
-        ALTER TABLE `ugmp_user_group` RENAME `username` TO ``user_name;
+        ALTER TABLE `ugmp_user_group` CHANGE COLUMN `username` `user_name` VARCHAR(250) NOT NULL;
+
     """)
 
 
