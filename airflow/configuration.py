@@ -157,6 +157,14 @@ class AirflowConfigParser(ConfigParser):
             self.get("webserver", "owner_mode").lower() == 'ldapgroup' and
             self.get("webserver", "auth_backend") != (
                 'airflow.contrib.auth.backends.ldap_auth')
+
+            or
+
+            self.getboolean("webserver", "authenticate") and
+            self.get("webserver", "owner_mode").lower() == 'keepgroup' and
+            self.get("webserver", "auth_backend") != (
+                'airflow.contrib.auth.backends.keep_auth')
+
         ):
             raise AirflowConfigException(
                 "error: attempt at using ldapgroup "
