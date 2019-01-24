@@ -80,7 +80,7 @@ class UserGroupView(wwwutils.SuperUserMixin, AirflowModelView):
                     UserGroup.user_name == username
                 )
                 return jsonify({
-                    "contains": True if len(user_groups) != 0 else False
+                    "contains": True if user_groups.count() != 0 else False
                 })
             else:
                 return jsonify({"code": -1, "detail": "username and group required", })
