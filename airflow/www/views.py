@@ -1826,7 +1826,7 @@ class HomeView(AdminIndexView):
         # read orm_dags from the db
         sql_query = session.query(DM)
 
-        if do_filter and owner_mode == 'ldapgroup':
+        if do_filter and owner_mode in ['ldapgroup', 'keepgroup']:
             sql_query = sql_query.filter(
                 ~DM.is_subdag,
                 DM.is_active,
@@ -1870,7 +1870,7 @@ class HomeView(AdminIndexView):
                                          not dag.parent_dag]
 
         # optionally filter to get only dags that the user should see
-        if do_filter and owner_mode == 'ldapgroup':
+        if do_filter and owner_mode in ['ldapgroup', 'keepgroup']:
             # only show dags owned by someone in @current_user.ldap_groups
             webserver_dags = {
                 dag.dag_id: dag
