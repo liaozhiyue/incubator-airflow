@@ -146,7 +146,7 @@ class AirflowConfigParser(ConfigParser):
 
         elif (
             self.getboolean("webserver", "authenticate") and
-            self.get("webserver", "owner_mode") not in ['user', 'ldapgroup']
+            self.get("webserver", "owner_mode") not in ['user', 'ldapgroup', 'keepgroup']
         ):
             raise AirflowConfigException(
                 "error: owner_mode option should be either "
