@@ -33,6 +33,11 @@ from airflow.configuration import AirflowConfigException
 import traceback
 import re
 
+import urllib2
+from future.moves.urllib.parse import urljoin
+import requests
+from airflow.api.client import api_client
+
 from airflow.utils.log.logging_mixin import LoggingMixin
 
 login_manager = flask_login.LoginManager()
@@ -48,6 +53,25 @@ class AuthenticationError(Exception):
 
 class LdapException(Exception):
     pass
+
+#
+# def client_request(url, method='GET', json=None):
+#     params = {
+#         'url': url,
+#         'auth': self._auth,
+#     }
+#     if json is not None:
+#         params['json'] = json
+#
+#     resp = getattr(requests, method.lower())(**params)
+#     if not resp.ok:
+#         try:
+#             data = resp.json()
+#         except Exception:
+#             data = {}
+#         raise IOError(data.get('error', 'Server error'))
+#
+#     return resp.json()
 
 
 def get_ldap_connection(dn=None, password=None):
@@ -70,50 +94,49 @@ def get_ldap_connection(dn=None, password=None):
     return conn
 
 
-def group_contains_user(conn, search_base, group_filter, user_name_attr, username):
-    search_filter = '(&({0}))'.format(group_filter)
-    if not conn.search(native(search_base), native(search_filter),
-                       attributes=[native(user_name_attr)]):
-        log.warning("Unable to find group for %s %s", search_base, search_filter)
+def group_contains_user(group, username):
+    # base_url = 'https://airflow-dev.sre.gotokeep.com'
+    # endpoint = '/admin/usergroup/api'
+
+    # req = urllib2.Request(url)
+    # print req
+    # res_data = urllib2.urlopen(req)
+    # res = res_data.read()
+    #
+    # data2 = r2.read()
+    # conn.close()
+
+    # url = urljoin(base_url, endpoint)
+    # data = client_request(url, method='POST',
+    #                      json={
+    #                          "api": 'is_group_contains_user',
+    #                          "username": username,
+    #                          "group": group,
+    #                      })
+
+    dict = {
+        'liaozhiyue': ['g_admin', 'g_warehouse'],
+        'huangxuanfeng': ['g_warehouse'],
+        'liyang': ['g_admin']
+    }
+
+    g = dict.get(username, [])
+
+    return True if group in g else False
+
+
+def groups_user(username):
+
+    if username == 'liaozhiyue':
+        groups = ['g_admin', 'g_warehouse']
+    elif username == 'liyang':
+        groups = ['g_admin']
+    elif username == 'huangxuanfeng':
+        groups = ['g_warehouse']
     else:
-        for entry in conn.entries:
-            if username in getattr(entry, user_name_attr).values:
-                return True
+        groups =['g_guest']
 
-    return False
-
-
-def groups_user(conn, search_base, user_filter, user_name_att, username):
-    search_filter = "(&({0})({1}={2}))".format(user_filter, user_name_att, username)
-    try:
-        memberof_attr = configuration.get("ldap", "group_member_attr")
-    except:
-        memberof_attr = "memberOf"
-    res = conn.search(native(search_base), native(search_filter),
-                      attributes=[native(memberof_attr)])
-    if not res:
-        log.info("Cannot find user %s", username)
-        raise AuthenticationError("Invalid username or password")
-
-    if conn.response and memberof_attr not in conn.response[0]["attributes"]:
-        log.warning("""Missing attribute "%s" when looked-up in Ldap database.
-        The user does not seem to be a member of a group and therefore won't see any dag
-        if the option filter_by_owner=True and owner_mode=ldapgroup are set""",
-                    memberof_attr)
-        return []
-
-    user_groups = conn.response[0]["attributes"][memberof_attr]
-
-    regex = re.compile("cn=([^,]*).*", re.IGNORECASE)
-    groups_list = []
-    try:
-        groups_list = [regex.search(i).group(1) for i in user_groups]
-    except IndexError:
-        log.warning("Parsing error when retrieving the user's group(s)."
-                    " Check if the user belongs to at least one group"
-                    " or if the user's groups name do not contain special characters")
-
-    return groups_list
+    return groups
 
 
 class LdapUser(models.User):
