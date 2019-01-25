@@ -442,7 +442,7 @@ return not skip
             if conf:
                 # -- 准备DAG owner/group，写入Python代码 --
                 conf['owner'] = dcmp_dag.owner_name
-                conf['group'] = dcmp_dag.group_name
+                conf['group'] = dcmp_dag.group
                 # -- end --
                 confs[dcmp_dag.dag_name] = conf
 

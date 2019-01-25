@@ -122,7 +122,7 @@
 
                 <!-- Column 6: Dag Groups -->
                 <td>
-                  {{ dag.owner if dag else orm_dags[dag_id].groups }}
+                  {{ dag.group if dag else orm_dags[dag_id].groups }}
                 </td>
 
                 <!-- Column 7: Dag Runs -->

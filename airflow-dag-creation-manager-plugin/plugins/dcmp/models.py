@@ -66,7 +66,7 @@ class DcmpDag(Base):
     owner_id = Column(Integer)
     owner_name = Column(String(ID_LEN))
     # 增加 dag group
-    group_name = Column(String(ID_LEN))
+    group = Column(String(ID_LEN))
 
     def __repr__(self):
         return self.dag_name
@@ -85,7 +85,7 @@ class DcmpDag(Base):
     # 设置dag group
     def set_group(self, group):
         if group:
-            self.group_name = group
+            self.group = group
 
     def start_editing(self, user):
         if user:
@@ -142,14 +142,17 @@ class DcmpDag(Base):
         dcmp_dag_conf.set_approver(user)
 
     @provide_session
-    def update_conf(self, conf, user=None, group=None, session=None):
+    def update_conf(self, conf, user=None, session=None):
         created = self.id is None
         if not created:
             old_conf = self.get_conf(pure=True, session=session)
             if old_conf == conf:
                 return None
         self.set_last_editor(user)
+
+        group = conf["group"]
         self.set_group(group)
+
         self.last_edited_at = datetime.now()
         self.category = conf.get("category", "default")
         if not created:
