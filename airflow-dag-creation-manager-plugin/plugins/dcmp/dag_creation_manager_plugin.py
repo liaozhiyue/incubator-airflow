@@ -121,7 +121,7 @@ class RequestArgsFilter(object):
         self.refresh_filter_arg_dict()
         self.refresh_filter_groups()
         self.refresh_filters()
-    
+
     def refresh_filter_arg_dict(self):
         filter_arg_dict = OrderedDict(self.arg_tuple)
         index = 0
@@ -177,7 +177,7 @@ class DagCreationManager(BaseView):
         "DAG_CREATION_MANAGER_CATEGORYS": dcmp_settings.DAG_CREATION_MANAGER_CATEGORYS,
         "DAG_CREATION_MANAGER_TASK_CATEGORYS": dcmp_settings.DAG_CREATION_MANAGER_TASK_CATEGORYS,
     }
-    
+
     DEFAULT_CONF = {
         "retries": 3,
         "retry_delay_minutes": 5,
@@ -278,7 +278,7 @@ class DagCreationManager(BaseView):
                     if dcmp_dag_conf.version == dcmp_dag.version:
                         dcmp_dag_confs[0], dcmp_dag_confs[i] = dcmp_dag_confs[i], dcmp_dag_confs[0]
                         break
-                
+
                 conf = dcmp_dag.get_conf(session=session)
                 if not readonly:
                     if dcmp_dag.editing:
@@ -411,11 +411,11 @@ class DagCreationManager(BaseView):
                 conf = dcmp_dag.get_conf(session=session)
                 conf1 = dcmp_dag.get_conf(version=version1, session=session)
                 conf2 = dcmp_dag.get_conf(version=version2, session=session)
-                
+
                 dcmp_dag_confs = session.query(DcmpDagConf).filter(
                     DcmpDagConf.dag_id == dcmp_dag.id,
                 ).order_by(DcmpDagConf.version.desc())
-                
+
         diff_table = difflib.HtmlDiff().make_table(
             self.conf_diff_preprocess(conf1),
             self.conf_diff_preprocess(conf2),
@@ -580,10 +580,10 @@ class DagCreationManager(BaseView):
                 ).first()
                 if dcmp_dag and dcmp_dag.editing and user.id == dcmp_dag.editing_user_id:
                     dcmp_dag.end_editing()
-                    session.commit()            
+                    session.commit()
             return jsonify({"code": 0, "detail": "succeeded", })
         return jsonify({"code": -1000, "detail": "no such api", })
-        
+
     def render_ti(self, ti, result_format=None):
         ti.render_templates()
         res = OrderedDict()

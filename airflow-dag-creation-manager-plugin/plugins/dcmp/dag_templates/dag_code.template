@@ -59,6 +59,7 @@ default_params = get_default_params()
 
 default_args = {
     'owner': '%(owner)s',
+    'group': '%(group)s',
     'start_date': %(start_date_code)s,
     'end_date': %(end_date_code)s,
     'email': %(email_code)s,

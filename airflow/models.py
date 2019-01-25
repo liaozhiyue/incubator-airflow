@@ -3230,6 +3230,11 @@ class DAG(BaseDag, LoggingMixin):
         return ", ".join(list(set([t.owner for t in self.tasks])))
 
     @property
+    def group(self):
+        group = self.default_args['group']
+        return group if group and group != '' else 'g_guest'
+
+    @property
     @provide_session
     def concurrency_reached(self, session=None):
         """
@@ -3858,7 +3863,7 @@ class DAG(BaseDag, LoggingMixin):
         return run
 
     @provide_session
-    def sync_to_db(self, owner=None, sync_time=None, session=None):
+    def sync_to_db(self, owner=None, group = None, sync_time=None, session=None):
         """
         Save attributes about this DAG to the DB. Note that this method
         can be called for both DAGs and SubDAGs. A SubDag is actually a
@@ -3873,6 +3878,8 @@ class DAG(BaseDag, LoggingMixin):
 
         if owner is None:
             owner = self.owner
+        if group is None:
+            group = self.group
         if sync_time is None:
             sync_time = datetime.utcnow()
 
@@ -3884,6 +3891,7 @@ class DAG(BaseDag, LoggingMixin):
         orm_dag.fileloc = self.fileloc
         orm_dag.is_subdag = self.is_subdag
         orm_dag.owners = owner
+        orm_dag.groups = group
         orm_dag.is_active = True
         orm_dag.last_scheduler_run = sync_time
         session.merge(orm_dag)

@@ -43,7 +43,7 @@ class DAGConverter(object):
         ("add_start_task", get_bool_code_false, False), ("add_end_task", get_bool_code_false, False),
         ("skip_dag_not_latest", get_bool_code_false, False), ("skip_dag_on_prev_running", get_bool_code_false, False),
         ("email_on_skip_dag", get_bool_code_false, False), ("emails", get_string, False), ("start_date", get_string, False),
-        ("end_date", get_string, False),("owner", get_string, False))
+        ("end_date", get_string, False),("owner", get_string, False),("group", get_string, False))
     TASK_ITEMS = (("task_name", get_string, True), ("task_type", get_string, True), ("command", get_string, False),
         ("priority_weight", get_int, False), ("upstreams", get_list, False), ("queue_pool", get_string, False),
         ("task_category", get_string, False), )
@@ -254,6 +254,9 @@ _["%(task_name)s"] << _["%(upstream_name)s"]
             if not conf.get("owner"):
                 conf["owner"] = "airflow"
 
+            if not conf.get("group"):
+                conf["group"] = "g_guest"
+
             task_names = [task["task_name"] for task in conf["tasks"]]
 
             def get_task_name(origin_task_name):
@@ -437,8 +440,9 @@ return not skip
         for dcmp_dag in dcmp_dags:
             conf = dcmp_dag.get_approved_conf(session=session)
             if conf:
-                # -- 准备DAG owner，写入Python代码 --
+                # -- 准备DAG owner/group，写入Python代码 --
                 conf['owner'] = dcmp_dag.owner_name
+                conf['group'] = dcmp_dag.group_name
                 # -- end --
                 confs[dcmp_dag.dag_name] = conf
 
