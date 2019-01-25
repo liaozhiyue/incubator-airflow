@@ -3230,7 +3230,8 @@ class DAG(BaseDag, LoggingMixin):
         return ", ".join(list(set([t.owner for t in self.tasks])))
 
     @property
-    def group(self):
+    @provide_session
+    def group(self, session=None):
         group = self.default_args.get('group', 'g_guest')
         return group
 
@@ -3863,7 +3864,7 @@ class DAG(BaseDag, LoggingMixin):
         return run
 
     @provide_session
-    def sync_to_db(self, owner=None, group = None, sync_time=None, session=None):
+    def sync_to_db(self, owner=None, group=None, sync_time=None, session=None):
         """
         Save attributes about this DAG to the DB. Note that this method
         can be called for both DAGs and SubDAGs. A SubDag is actually a

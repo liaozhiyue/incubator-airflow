@@ -1888,7 +1888,7 @@ class HomeView(AdminIndexView):
             webserver_dags = {
                 dag.dag_id: dag
                 for dag in unfiltered_webserver_dags
-                if dag.group.in_(current_user.ldap_groups)
+                if dag.group in current_user.ldap_groups
             }
         elif do_filter and owner_mode == 'user':
             # only show dags owned by @current_user.user.username

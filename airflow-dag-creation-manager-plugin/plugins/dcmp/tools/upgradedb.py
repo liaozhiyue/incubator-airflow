@@ -122,7 +122,7 @@ def run_version_0_2_1():
 def run_version_0_3_1():
     run_sql("ALTER TABLE dcmp_dag ADD owner_id int(11);", ignore_error=True)
     run_sql("ALTER TABLE dcmp_dag ADD owner_name varchar(250);", ignore_error=True)
-    run_sql("ALTER TABLE dcmp_dag ADD group varchar(250);", ignore_error=True)
+    run_sql("ALTER TABLE dcmp_dag ADD `group` varchar(250);", ignore_error=True)
 
 
 def main():
