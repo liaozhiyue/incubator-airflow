@@ -66,7 +66,7 @@ class DcmpDag(Base):
     owner_id = Column(Integer)
     owner_name = Column(String(ID_LEN))
     # 增加 dag group
-    group = Column(String(ID_LEN))
+    group_name = Column(String(ID_LEN))
 
     def __repr__(self):
         return self.dag_name
@@ -83,9 +83,9 @@ class DcmpDag(Base):
             self.owner_name = user.username
 
     # 设置dag group
-    def set_group(self, user):
-        if user:
-            self.group = user.group
+    def set_group(self, group):
+        if group:
+            self.group_name = group
 
     def start_editing(self, user):
         if user:

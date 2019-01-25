@@ -3231,8 +3231,8 @@ class DAG(BaseDag, LoggingMixin):
 
     @property
     def group(self):
-        group = self.default_args['group']
-        return group if group and group != '' else 'g_guest'
+        group = self.default_args.get('group', 'g_guest')
+        return group
 
     @property
     @provide_session
