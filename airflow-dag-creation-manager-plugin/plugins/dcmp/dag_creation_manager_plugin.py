@@ -211,7 +211,13 @@ class DagCreationManager(BaseView):
             (COMMAND, {"operations": ["contains"], "no_filters": True}),
         ))
         confs = OrderedDict()
+
+        current_user = get_current_user(False)
+        groups = current_user.ldap_groups
         dcmp_dags = session.query(DcmpDag).order_by(DcmpDag.dag_name).filter(*request_args_filter.filters)
+        if not current_user.is_superuser():
+            dcmp_dags = dcmp_dags.filter(DcmpDag.group.in_(groups))
+
         dcmp_dags_count = dcmp_dags.count()
         dcmp_dags = dcmp_dags[:]
         for dcmp_dag in dcmp_dags:
