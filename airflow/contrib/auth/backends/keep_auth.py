@@ -31,12 +31,9 @@ from airflow import configuration
 from airflow.configuration import AirflowConfigException
 
 import traceback
-import re
 
-# import urllib2
-# from future.moves.urllib.parse import urljoin
-# import requests
-# from airflow.api.client import api_client
+import urllib2
+import json
 
 from airflow.utils.log.logging_mixin import LoggingMixin
 
@@ -53,25 +50,6 @@ class AuthenticationError(Exception):
 
 class LdapException(Exception):
     pass
-
-#
-# def client_request(url, method='GET', json=None):
-#     params = {
-#         'url': url,
-#         'auth': self._auth,
-#     }
-#     if json is not None:
-#         params['json'] = json
-#
-#     resp = getattr(requests, method.lower())(**params)
-#     if not resp.ok:
-#         try:
-#             data = resp.json()
-#         except Exception:
-#             data = {}
-#         raise IOError(data.get('error', 'Server error'))
-#
-#     return resp.json()
 
 
 def get_ldap_connection(dn=None, password=None):
@@ -94,48 +72,60 @@ def get_ldap_connection(dn=None, password=None):
     return conn
 
 
+base_url = 'http://localhost:8080'
+endpoint = '/admin/usergroup/api'
+
+
 def group_contains_user(group, username):
-    # base_url = 'https://airflow-dev.sre.gotokeep.com'
-    # endpoint = '/admin/usergroup/api'
+    params = 'api=is_group_contains_user&username=' + username + '&group=' + group
+    url = base_url + endpoint
+    url = url + '?' + params
 
-    # req = urllib2.Request(url)
-    # print req
-    # res_data = urllib2.urlopen(req)
-    # res = res_data.read()
-    #
-    # data2 = r2.read()
-    # conn.close()
+    log.info(url)
+    req = urllib2.Request(url=url)
+    res_data = urllib2.urlopen(req)
+    res = res_data.read()
+    r = json.loads(res)
+    is_contains = r['contains']
 
-    # url = urljoin(base_url, endpoint)
-    # data = client_request(url, method='POST',
-    #                      json={
-    #                          "api": 'is_group_contains_user',
-    #                          "username": username,
-    #                          "group": group,
-    #                      })
+    # dict = {
+    #     'liaozhiyue': ['g_admin', 'g_warehouse'],
+    #     'huangxuanfeng': ['g_warehouse'],
+    #     'liyang': ['g_admin']
+    # }
+    # g = dict.get(username, [])
+    # return True if group in g else False
 
-    dict = {
-        'liaozhiyue': ['g_admin', 'g_warehouse'],
-        'huangxuanfeng': ['g_warehouse'],
-        'liyang': ['g_admin']
-    }
-
-    g = dict.get(username, [])
-
-    return True if group in g else False
+    return is_contains
 
 
 def groups_user(username):
 
-    if username == 'liaozhiyue':
-        groups = ['g_admin', 'g_warehouse']
-    elif username == 'liyang':
-        groups = ['g_admin']
-    elif username == 'huangxuanfeng':
-        groups = ['g_warehouse']
-    else:
-        groups =['g_guest']
+    # if username == 'liaozhiyue':
+    #     groups = ['g_admin', 'g_warehouse']
+    # elif username == 'liyang':
+    #     groups = ['g_admin']
+    # elif username == 'huangxuanfeng':
+    #     groups = ['g_warehouse']
+    # else:
+    #     groups =['g_guest']
 
+    # return groups
+
+    params = 'api=get_groups_by_user&username=' + username
+    url = base_url + endpoint
+    url = url + '?' + params
+
+    log.info(url)
+    req = urllib2.Request(url=url)
+    res_data = urllib2.urlopen(req)
+    res = res_data.read()
+    r = json.loads(res)
+    # print r
+    groups = []
+    for u in r:
+        groups.append(u['group'])
+    # print groups
     return groups
 
 

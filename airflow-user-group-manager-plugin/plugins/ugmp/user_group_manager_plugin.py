@@ -35,7 +35,12 @@ class AirflowModelView(ModelView):
     page_size = 500
 
 
-class UserGroupView(wwwutils.SuperUserMixin, AirflowModelView):
+class AccessMixin(object):
+    def is_accessible(self):
+        return True
+
+
+class UserGroupView(AccessMixin, AirflowModelView):
 
     verbose_name = "User Group"
     verbose_name_plural = "User Groups"
@@ -47,9 +52,10 @@ class UserGroupView(wwwutils.SuperUserMixin, AirflowModelView):
 
     @csrf.exempt
     @expose("/api", methods=["GET", "POST"])
-    @login_required
-    @provide_session
+    # @login_required
+    # @provide_session
     def api(self, session=None):
+        session = settings.Session()
         api = request.args.get("api")
         # 按照用户查找用户组
         if api == "get_groups_by_user":
