@@ -73,7 +73,10 @@ class AdminUserMixin(object):
         return True
 
     def is_visible(self):
-        return current_user.is_superuser
+        return (
+            not AUTHENTICATE or
+            (not current_user.is_anonymous() and current_user.is_superuser())
+        )
 
 
 class DataProfilingMixin(object):
