@@ -68,6 +68,14 @@ class SuperUserMixin(object):
         )
 
 
+class AdminUserMixin(object):
+    def is_accessible(self):
+        return True
+
+    def is_visible(self):
+        return current_user.is_superuser
+
+
 class DataProfilingMixin(object):
     def is_accessible(self):
         return (

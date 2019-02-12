@@ -35,12 +35,7 @@ class AirflowModelView(ModelView):
     page_size = 500
 
 
-class AccessMixin(object):
-    def is_accessible(self):
-        return True
-
-
-class UserGroupView(AccessMixin, AirflowModelView):
+class UserGroupView(wwwutils.AdminUserMixin, AirflowModelView):
 
     verbose_name = "User Group"
     verbose_name_plural = "User Groups"
