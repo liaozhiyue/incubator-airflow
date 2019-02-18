@@ -74,6 +74,7 @@ def get_ldap_connection(dn=None, password=None):
 
 base_url = 'http://localhost:8080'
 endpoint = '/admin/usergroup/api'
+melon_url = 'https://melon-pre.sre.gotokeep.com/api/security/ldapUserRole/roles?'  # userName=chenguojun'
 
 
 def group_contains_user(group, username):
@@ -81,12 +82,25 @@ def group_contains_user(group, username):
     url = base_url + endpoint
     url = url + '?' + params
 
+    # airflow group
     log.info(url)
     req = urllib2.Request(url=url)
     res_data = urllib2.urlopen(req)
     res = res_data.read()
     r = json.loads(res)
-    is_contains = r['contains']
+    is_airflow_contains = r['contains']
+
+    # melon group
+    url = melon_url + '?' + 'userName=' + username
+    req = urllib2.Request(url=url)
+    res_data = urllib2.urlopen(req)
+    res = res_data.read()
+    r = json.loads(res)
+    groups = r['data']['roleNames']
+    groups_list = groups.split(',')
+    is_melon_contains = group in groups_list
+
+    # test
 
     # dict = {
     #     'liaozhiyue': ['g_admin', 'g_warehouse'],
@@ -96,7 +110,7 @@ def group_contains_user(group, username):
     # g = dict.get(username, [])
     # return True if group in g else False
 
-    return is_contains
+    return is_airflow_contains or is_melon_contains
 
 
 def groups_user(username):
@@ -112,6 +126,9 @@ def groups_user(username):
 
     # return groups
 
+
+    # airflow
+
     params = 'api=get_groups_by_user&username=' + username
     url = base_url + endpoint
     url = url + '?' + params
@@ -125,7 +142,22 @@ def groups_user(username):
     groups = []
     for u in r:
         groups.append(u['group'])
-    # print groups
+
+    # melon group
+    url = melon_url + '?' + 'userName=' + username
+    req = urllib2.Request(url=url)
+    res_data = urllib2.urlopen(req)
+    res = res_data.read()
+    r = json.loads(res)
+    groups = r['data']['roleNames']
+    groups_list = groups.split(',')
+
+    # merge airflow/melon group
+    for group in groups_list:
+        if group not in group:
+            groups.append(group)
+
+    print groups
     return groups
 
 
