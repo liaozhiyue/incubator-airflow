@@ -74,7 +74,7 @@ def get_ldap_connection(dn=None, password=None):
 
 base_url = 'http://localhost:8080'
 endpoint = '/admin/usergroup/api'
-melon_url = 'https://melon-pre.sre.gotokeep.com/api/security/ldapUserRole/roles?'  # userName=chenguojun'
+melon_url = 'https://melon-pre.sre.gotokeep.com/api/security/ldapUserRole/roles'  # userName=chenguojun'
 
 
 def group_contains_user(group, username):
@@ -92,10 +92,12 @@ def group_contains_user(group, username):
 
     # melon group
     url = melon_url + '?' + 'userName=' + username
+    log.info(url)
     req = urllib2.Request(url=url)
     res_data = urllib2.urlopen(req)
     res = res_data.read()
     r = json.loads(res)
+    #print r
     groups = r['data']['roleNames']
     groups_list = groups.split(',')
     is_melon_contains = group in groups_list
@@ -110,6 +112,7 @@ def group_contains_user(group, username):
     # g = dict.get(username, [])
     # return True if group in g else False
 
+    print 'is_airflow_contains=' + str(is_airflow_contains) + ' is_melon_contains=' + str(is_melon_contains)
     return is_airflow_contains or is_melon_contains
 
 
@@ -145,16 +148,18 @@ def groups_user(username):
 
     # melon group
     url = melon_url + '?' + 'userName=' + username
+    log.info(url)
     req = urllib2.Request(url=url)
     res_data = urllib2.urlopen(req)
     res = res_data.read()
     r = json.loads(res)
-    groups = r['data']['roleNames']
-    groups_list = groups.split(',')
+    melon_groups = r['data']['roleNames']
+    groups_list = melon_groups.split(',')
 
     # merge airflow/melon group
+    # print groups_list
     for group in groups_list:
-        if group not in group:
+        if group not in groups:
             groups.append(group)
 
     print groups
