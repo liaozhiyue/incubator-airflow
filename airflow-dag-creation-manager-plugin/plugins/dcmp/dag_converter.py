@@ -46,7 +46,7 @@ class DAGConverter(object):
         ("end_date", get_string, False),("owner", get_string, False),("group", get_string, False))
     TASK_ITEMS = (("task_name", get_string, True), ("task_type", get_string, True), ("command", get_string, False),
         ("priority_weight", get_int, False), ("upstreams", get_list, False), ("queue_pool", get_string, False),
-        ("task_category", get_string, False), )
+        ("task_category", get_string, False), ("run_as_user", get_string, False),)
     TASK_EXTRA_ITEMS = (("retries", get_int, "retries=%s,"), ("retry_delay_minutes", get_int, "retry_delay=timedelta(minutes=%s),"), )
 
     DAG_CODE_TEMPLATE = load_dag_template("dag_code")
@@ -58,6 +58,7 @@ _["%%(task_name)s"] = %(operator_name)s(
     priority_weight=%%(priority_weight)s,
     queue=%%(queue_code)s,
     pool=%%(pool_code)s,
+    run_as_user='''%%(run_as_user)s''',
     dag=dag,
     %%(extra_params)s)
 
@@ -269,6 +270,9 @@ _["%(task_name)s"] << _["%(upstream_name)s"]
                 else:
                     task_name = None
                 return task_name
+
+            for task in conf["tasks"]:
+                task["run_as_user"] = conf["owner"]
 
             if conf["add_start_task"]:
                 task_name = get_task_name("start")
