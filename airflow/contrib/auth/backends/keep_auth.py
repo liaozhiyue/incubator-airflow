@@ -56,13 +56,13 @@ def get_ldap_connection(dn=None, password=None):
     tls_configuration = None
     use_ssl = False
     try:
-        cacert = configuration.get("ldap", "cacert")
+        cacert = configuration.get("keep_ldap", "cacert")
         tls_configuration = Tls(validate=ssl.CERT_REQUIRED, ca_certs_file=cacert)
         use_ssl = True
     except:
         pass
 
-    server = Server(configuration.get("ldap", "uri"), use_ssl, tls_configuration)
+    server = Server(configuration.get("keep_ldap", "uri"), use_ssl, tls_configuration)
     conn = Connection(server, native(dn), native(password))
 
     if not conn.bind():
@@ -72,15 +72,17 @@ def get_ldap_connection(dn=None, password=None):
     return conn
 
 
-base_url = 'http://localhost:8080'
-endpoint = '/admin/usergroup/api'
-melon_url = 'https://melon-pre.sre.gotokeep.com/api/security/ldapUserRole/roles'  # userName=chenguojun'
+#base_url = 'http://localhost:8080'
+#endpoint = '/admin/usergroup/api'
+group_api = configuration.get("keep_ldap", "group_api")
+
+#melon_group_api = 'https://melon-pre.sre.gotokeep.com/api/security/ldapUserRole/roles'  # userName=chenguojun'
+melon_group_api = configuration.get("keep_ldap", "melon_group_api")
 
 
 def group_contains_user(group, username):
     params = 'api=is_group_contains_user&username=' + username + '&group=' + group
-    url = base_url + endpoint
-    url = url + '?' + params
+    url = group_api + '?' + params
 
     # airflow group
     log.info(url)
@@ -91,7 +93,7 @@ def group_contains_user(group, username):
     is_airflow_contains = r['contains']
 
     # melon group
-    url = melon_url + '?' + 'userName=' + username
+    url = melon_group_api + '?' + 'userName=' + username
     log.info(url)
     req = urllib2.Request(url=url)
     res_data = urllib2.urlopen(req)
@@ -133,8 +135,7 @@ def groups_user(username):
     # airflow
 
     params = 'api=get_groups_by_user&username=' + username
-    url = base_url + endpoint
-    url = url + '?' + params
+    url = group_api + '?' + params
 
     log.info(url)
     req = urllib2.Request(url=url)
@@ -147,7 +148,7 @@ def groups_user(username):
         groups.append(u['group'])
 
     # melon group
-    url = melon_url + '?' + 'userName=' + username
+    url = melon_group_api + '?' + 'userName=' + username
     log.info(url)
     req = urllib2.Request(url=url)
     res_data = urllib2.urlopen(req)
@@ -172,13 +173,13 @@ class LdapUser(models.User):
         self.ldap_groups = []
 
         # Load and cache superuser and data_profiler settings.
-        conn = get_ldap_connection(configuration.get("ldap", "bind_user"),
-                                   configuration.get("ldap", "bind_password"))
+        conn = get_ldap_connection(configuration.get("keep_ldap", "bind_user"),
+                                   configuration.get("keep_ldap", "bind_password"))
 
         superuser_filter = None
         data_profiler_filter = None
         try:
-            superuser_filter = configuration.get("ldap", "superuser_filter")
+            superuser_filter = configuration.get("keep_ldap", "superuser_filter")
         except AirflowConfigException:
             pass
 
@@ -190,7 +191,7 @@ class LdapUser(models.User):
             self.superuser = group_contains_user(admin_group, user.username)
 
         try:
-            data_profiler_filter = configuration.get("ldap", "data_profiler_filter")
+            data_profiler_filter = configuration.get("keep_ldap", "data_profiler_filter")
         except AirflowConfigException:
             pass
 
@@ -210,12 +211,12 @@ class LdapUser(models.User):
 
     @staticmethod
     def try_login(username, password):
-        conn = get_ldap_connection(configuration.get("ldap", "bind_user"),
-                                   configuration.get("ldap", "bind_password"))
+        conn = get_ldap_connection(configuration.get("keep_ldap", "bind_user"),
+                                   configuration.get("keep_ldap", "bind_password"))
 
         search_filter = "(&({0})({1}={2}))".format(
-            configuration.get("ldap", "user_filter"),
-            configuration.get("ldap", "user_name_attr"),
+            configuration.get("keep_ldap", "user_filter"),
+            configuration.get("keep_ldap", "user_name_attr"),
             username
         )
 
@@ -226,12 +227,12 @@ class LdapUser(models.User):
         }
 
         search_scope = LEVEL
-        if configuration.has_option("ldap", "search_scope"):
-            search_scope = SUBTREE if configuration.get("ldap", "search_scope") == "SUBTREE" else LEVEL
+        if configuration.has_option("keep_ldap", "search_scope"):
+            search_scope = SUBTREE if configuration.get("keep_ldap", "search_scope") == "SUBTREE" else LEVEL
 
         # todo: BASE or ONELEVEL?
 
-        res = conn.search(native(configuration.get("ldap", "basedn")),
+        res = conn.search(native(configuration.get("keep_ldap", "basedn")),
                           native(search_filter),
                           search_scope=native(search_scope))
 
