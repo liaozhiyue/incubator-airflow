@@ -256,7 +256,7 @@ _["%(task_name)s"] << _["%(upstream_name)s"]
                 conf["owner"] = "airflow"
 
             if not conf.get("group"):
-                conf["group"] = "g_guest"
+                conf["group"] = "default"
 
             task_names = [task["task_name"] for task in conf["tasks"]]
 

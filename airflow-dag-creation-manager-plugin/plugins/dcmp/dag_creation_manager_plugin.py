@@ -179,7 +179,7 @@ class DagCreationManager(BaseView):
     }
 
     DEFAULT_CONF = {
-        "group": "g_guest",
+        "group": "default",
         "retries": 3,
         "retry_delay_minutes": 5,
         "start_date": "",
