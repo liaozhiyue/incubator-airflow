@@ -98,7 +98,8 @@ def create_app(config=None, testing=False):
 
         admin.add_link(base.MenuLink(
             category='Docs', name='Documentation',
-            url='http://pythonhosted.org/airflow/'))
+            # url='http://pythonhosted.org/airflow/'))
+            url='https://docs.google.com/document/d/14vr8pJGqMwDI2ldhi5tXtDwVArhlQkH6zD3ioEHDOEQ/edit?usp=sharing'))
         admin.add_link(
             base.MenuLink(category='Docs',
                 name='Github',url='https://github.com/apache/incubator-airflow'))
