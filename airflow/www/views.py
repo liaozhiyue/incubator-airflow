@@ -1910,7 +1910,8 @@ class HomeView(AdminIndexView):
                 dag_id: dag
                 for dag_id, dag in webserver_dags.items()
                 if (lower_search_query in dag_id.lower() or
-                    lower_search_query in dag.owner.lower())
+                    lower_search_query in dag.owner.lower() or
+                    lower_search_query in dag.group.lower())
             }
 
             all_dag_ids = (set([dag.dag_id for dag in orm_dags.values()
