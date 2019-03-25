@@ -80,17 +80,18 @@ group_api = configuration.get("keep_ldap", "group_api")
 melon_group_api = configuration.get("keep_ldap", "melon_group_api")
 
 
-def group_contains_user(group, username):
+def group_contains_user(group, username, ldap_groups):
     params = 'api=is_group_contains_user&username=' + username + '&group=' + group
     url = group_api + '?' + params
 
     # airflow group
-    log.info(url)
-    req = urllib2.Request(url=url)
-    res_data = urllib2.urlopen(req)
-    res = res_data.read()
-    r = json.loads(res)
-    is_airflow_contains = r['contains']
+    # log.info(url)
+    # req = urllib2.Request(url=url)
+    # res_data = urllib2.urlopen(req)
+    # res = res_data.read()
+    # r = json.loads(res)
+    # is_airflow_contains = r['contains']
+    is_airflow_contains = group in ldap_groups
 
     # melon group
     url = melon_group_api + '?' + 'userName=' + username
@@ -172,6 +173,12 @@ class LdapUser(models.User):
         self.user = user
         self.ldap_groups = []
 
+        # Load the ldap group(s) a user belongs to
+        try:
+            self.ldap_groups = groups_user(user.username)
+        except AirflowConfigException:
+            log.debug("Missing configuration for ldap settings. Skipping")
+
         # Load and cache superuser and data_profiler settings.
         conn = get_ldap_connection(configuration.get("keep_ldap", "bind_user"),
                                    configuration.get("keep_ldap", "bind_password"))
@@ -188,7 +195,7 @@ class LdapUser(models.User):
             log.debug("Missing configuration for superuser settings or empty. Skipping.")
         else:
             admin_group = superuser_filter
-            self.superuser = group_contains_user(admin_group, user.username)
+            self.superuser = group_contains_user(admin_group, user.username, self.ldap_groups)
 
         try:
             data_profiler_filter = configuration.get("keep_ldap", "data_profiler_filter")
@@ -201,13 +208,7 @@ class LdapUser(models.User):
                       "Skipping.")
         else:
             admin_group = data_profiler_filter
-            self.data_profiler = group_contains_user(admin_group, user.username)
-
-        # Load the ldap group(s) a user belongs to
-        try:
-            self.ldap_groups = groups_user(user.username)
-        except AirflowConfigException:
-            log.debug("Missing configuration for ldap settings. Skipping")
+            self.data_profiler = group_contains_user(admin_group, user.username, self.ldap_groups)
 
     @staticmethod
     def try_login(username, password):
