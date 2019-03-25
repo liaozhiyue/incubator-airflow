@@ -80,43 +80,44 @@ group_api = configuration.get("keep_ldap", "group_api")
 melon_group_api = configuration.get("keep_ldap", "melon_group_api")
 
 
-def group_contains_user(group, username, ldap_groups):
-    params = 'api=is_group_contains_user&username=' + username + '&group=' + group
-    url = group_api + '?' + params
-
-    # airflow group
+def group_contains_user(group, ldap_groups):
+    # params = 'api=is_group_contains_user&username=' + username + '&group=' + group
+    # url = group_api + '?' + params
+    #
+    # # airflow group
+    # # log.info(url)
+    # # req = urllib2.Request(url=url)
+    # # res_data = urllib2.urlopen(req)
+    # # res = res_data.read()
+    # # r = json.loads(res)
+    # # is_airflow_contains = r['contains']
+    # is_airflow_contains = group in ldap_groups
+    #
+    # # melon group
+    # url = melon_group_api + '?' + 'userName=' + username
     # log.info(url)
     # req = urllib2.Request(url=url)
     # res_data = urllib2.urlopen(req)
     # res = res_data.read()
     # r = json.loads(res)
-    # is_airflow_contains = r['contains']
-    is_airflow_contains = group in ldap_groups
-
-    # melon group
-    url = melon_group_api + '?' + 'userName=' + username
-    log.info(url)
-    req = urllib2.Request(url=url)
-    res_data = urllib2.urlopen(req)
-    res = res_data.read()
-    r = json.loads(res)
-    #print r
-    groups = r['data']['roleNames']
-    groups_list = groups.split(',')
-    is_melon_contains = group in groups_list
-
-    # test
-
-    # dict = {
-    #     'liaozhiyue': ['g_admin', 'g_warehouse'],
-    #     'huangxuanfeng': ['g_warehouse'],
-    #     'liyang': ['g_admin']
-    # }
-    # g = dict.get(username, [])
-    # return True if group in g else False
-
-    print 'is_airflow_contains=' + str(is_airflow_contains) + ' is_melon_contains=' + str(is_melon_contains)
-    return is_airflow_contains or is_melon_contains
+    # #print r
+    # groups = r['data']['roleNames']
+    # groups_list = groups.split(',')
+    # is_melon_contains = group in groups_list
+    #
+    # # test
+    #
+    # # dict = {
+    # #     'liaozhiyue': ['g_admin', 'g_warehouse'],
+    # #     'huangxuanfeng': ['g_warehouse'],
+    # #     'liyang': ['g_admin']
+    # # }
+    # # g = dict.get(username, [])
+    # # return True if group in g else False
+    #
+    # print 'is_airflow_contains=' + str(is_airflow_contains) + ' is_melon_contains=' + str(is_melon_contains)
+    # return is_airflow_contains or is_melon_contains
+    return group in ldap_groups
 
 
 def groups_user(username):
@@ -195,7 +196,7 @@ class LdapUser(models.User):
             log.debug("Missing configuration for superuser settings or empty. Skipping.")
         else:
             admin_group = superuser_filter
-            self.superuser = group_contains_user(admin_group, user.username, self.ldap_groups)
+            self.superuser = group_contains_user(admin_group, self.ldap_groups)
 
         try:
             data_profiler_filter = configuration.get("keep_ldap", "data_profiler_filter")
@@ -208,7 +209,7 @@ class LdapUser(models.User):
                       "Skipping.")
         else:
             admin_group = data_profiler_filter
-            self.data_profiler = group_contains_user(admin_group, user.username, self.ldap_groups)
+            self.data_profiler = group_contains_user(admin_group, self.ldap_groups)
 
     @staticmethod
     def try_login(username, password):
