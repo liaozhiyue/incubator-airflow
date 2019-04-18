@@ -11,17 +11,37 @@
     <link href="{{ url_for('dag_creation_manager_bp.static', filename='dcmp/css/edit.css') }}" rel="stylesheet" type="text/css">
     <script>
         var _wasPageCleanedUp = false;
+        // function pageCleanup()
+        // {
+        //     if (!_wasPageCleanedUp)
+        //     {
+        //         if(window.save_draft) window.save_draft();
+        //         var xmlhttp = new XMLHttpRequest();
+        //         xmlhttp.open("GET", "api?api=end_editing&dag_name={{ conf.dag_name }}", false);
+        //         xmlhttp.send();
+        //         _wasPageCleanedUp = true;
+        //     }
+        // }
+
         function pageCleanup()
         {
             if (!_wasPageCleanedUp)
             {
                 if(window.save_draft) window.save_draft();
-                var xmlhttp = new XMLHttpRequest();
-                xmlhttp.open("GET", "api?api=end_editing&dag_name={{ conf.dag_name }}", false);
-                xmlhttp.send();
+                if("sendBeacon" in navigator)
+                {
+                    navigator.sendBeacon("api?api=end_editing&dag_name={{ conf.dag_name }}");
+                }
+                else
+                {
+                    var client = new XMLHttpRequest();
+                    client.open("GET", "api?api=end_editing&dag_name={{ conf.dag_name }}", false);
+                    client.send();
+                }
                 _wasPageCleanedUp = true;
             }
         }
+
         
         window.onbeforeunload = function() {
             pageCleanup();
