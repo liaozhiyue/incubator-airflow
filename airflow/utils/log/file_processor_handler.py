@@ -45,7 +45,17 @@ class FileProcessorHandler(logging.Handler):
 
         self._cur_date = datetime.today()
         if not os.path.exists(self._get_log_directory()):
-            os.makedirs(self._get_log_directory())
+            # fix by liaozhiyue
+            # 修复过个task同时创建目录的时候报目录已经存在的bug
+            # os.makedirs(self._get_log_directory())
+            try:
+                os.makedirs(self._get_log_directory())
+            except OSError:
+                # only ignore case where the directory already exist
+                if not os.path.isdir(self._get_log_directory()):
+                    raise
+
+                logging.warning("%s already exists", self._get_log_directory())
 
         self._symlink_latest_log_directory()
 
@@ -125,7 +135,14 @@ class FileProcessorHandler(logging.Handler):
         directory = os.path.dirname(full_path)
 
         if not os.path.exists(directory):
-            os.makedirs(directory)
+            # fix by liaozhiyue
+            # 修复过个task同时创建目录的时候报目录已经存在的bug
+            # os.makedirs(directory)
+            try:
+                os.makedirs(directory)
+            except OSError:
+                if not os.path.isdir(directory):
+                    raise
 
         if not os.path.exists(full_path):
             open(full_path, "a").close()
